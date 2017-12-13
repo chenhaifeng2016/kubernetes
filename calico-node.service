@@ -1,0 +1,36 @@
+[Unit]
+Description=calico node
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=root
+PermissionsStartOnly=true
+ExecStart=/usr/bin/docker run --net=host --privileged --name=calico-node \
+  -e ETCD_ENDPOINTS=http://10.0.0.210:2379 \
+  -e NODENAME=${HOSTNAME} \
+  -e IP= \
+  -e NO_DEFAULT_POOLS= \
+  -e AS= \
+  -e CALICO_LIBNETWORK_ENABLED=true \
+  -e IP6= \
+  -e CALICO_NETWORKING_BACKEND=bird \
+  -e FELIX_DEFAULTENDPOINTTOHOSTACTION=ACCEPT \
+  -e FELIX_HEALTHENABLED=true \
+  -e CALICO_IPV4POOL_CIDR=10.244.0.0/16 \
+  -e CALICO_IPV4POOL_IPIP=always \
+  -e IP_AUTODETECTION_METHOD=interface=eth0 \
+  -e IP6_AUTODETECTION_METHOD=interface=eth0 \
+  -v /etc/etcd/ssl:/etc/etcd/ssl \
+  -v /var/run/calico:/var/run/calico \
+  -v /lib/modules:/lib/modules \
+  -v /run/docker/plugins:/run/docker/plugins \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /var/log/calico:/var/log/calico \
+  quay.io/calico/node:v2.6.3
+ExecStop=/usr/bin/docker rm -f calico-node
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
